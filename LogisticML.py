@@ -7,7 +7,11 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def logisticRegression(trainX, trainY, testX, noOfIter, alpha, lamda, options):
+def cost(trainY, g):
+    return np.sum(np.multiply(trainY, np.log(g))+np.multiply((1-trainY), np.log(1-g)))
+
+
+def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, options):
     if options[1] == "random":
         w = np.random.rand(trainX.shape[1])
     elif options[1] == "normal" or options[1] == "gaussian":
@@ -15,11 +19,13 @@ def logisticRegression(trainX, trainY, testX, noOfIter, alpha, lamda, options):
         w = np.random.normal(0, 7, trainX.shape[1])
     elif options[1] == "uniform":
         w = np.random.uniform(-7, 7, trainX.shape[1])
-
+    error = []
+    x = []
     for i in range(noOfIter):
         z = np.dot(trainX, w)
         g = sigmoid(z)  # Hypothesis
-
+        error.append(cost(trainY, g))
+        x.append(i)
         if options[0] == "without":
             delW = (np.dot(np.transpose(trainX), (g-trainY))) / len(trainY)
         elif options[0] == "L1 norm":
@@ -29,6 +35,8 @@ def logisticRegression(trainX, trainY, testX, noOfIter, alpha, lamda, options):
             delW = (np.dot(np.transpose(trainX), (g-trainY)) +
                     lamda*w) / len(trainY)
         w = w - alpha * delW
+    plt.plot(x, error)
+    plt.show()
     z = np.dot(testX, w)
     test_hyp = sigmoid(z)  # testing hypothesis
     return w, test_hyp >= 0.5
@@ -60,7 +68,7 @@ if __name__ == "__main__":
             for alpha in [0.01, 0.1, 0.3, 1, 3]:
                 for lamda in [0.1, 0.5, 1]:
                     w, pred = logisticRegression(
-                        trainX, trainY, testX, 5000, alpha, lamda, [opt0, opt1])
+                        trainX, trainY, testX, testY, 5000, alpha, lamda, [opt0, opt1])
                     if opt0 != "without":
                         print("        regularization constant is : ", lamda)
                         print("        regularisation type is: ", opt0)

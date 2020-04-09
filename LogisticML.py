@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+fig = plt.figure()
 
 
 def sigmoid(z):
@@ -8,10 +11,11 @@ def sigmoid(z):
 
 
 def cost(trainY, g):
-    return np.sum(np.multiply(trainY, np.log(g))+np.multiply((1-trainY), np.log(1-g)))
+    return np.sum(np.multiply(trainY, np.log(g))+np.multiply((1-trainY), np.log(1-g)))/trainY.shape[0]
 
 
 def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, options):
+    global a
     if options[1] == "random":
         w = np.random.rand(trainX.shape[1])
     elif options[1] == "normal" or options[1] == "gaussian":
@@ -19,12 +23,14 @@ def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, opt
         w = np.random.normal(0, 7, trainX.shape[1])
     elif options[1] == "uniform":
         w = np.random.uniform(-7, 7, trainX.shape[1])
-    error = []
+    errorX = []
+    errorY = []
     x = []
     for i in range(noOfIter):
         z = np.dot(trainX, w)
         g = sigmoid(z)  # Hypothesis
-        error.append(cost(trainY, g))
+        errorX.append(abs(cost(trainY, g)))
+        errorY.append(abs(cost(testY, sigmoid(np.dot(testX, w)))))
         x.append(i)
         if options[0] == "without":
             delW = (np.dot(np.transpose(trainX), (g-trainY))) / len(trainY)
@@ -35,7 +41,8 @@ def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, opt
             delW = (np.dot(np.transpose(trainX), (g-trainY)) +
                     lamda*w) / len(trainY)
         w = w - alpha * delW
-    plt.plot(x, error)
+    plt.plot(x, errorX)
+    plt.plot(x, errorY)
     plt.show()
     z = np.dot(testX, w)
     test_hyp = sigmoid(z)  # testing hypothesis
@@ -65,7 +72,7 @@ if __name__ == "__main__":
 
     for opt0 in ["without", "L1 norm", "L2 norm"]:
         for opt1 in ["random", "gaussian", "uniform"]:
-            for alpha in [0.01, 0.1, 0.3, 1, 3]:
+            for alpha in [0.0001, 0.01, 0.1, 0.3]:
                 for lamda in [0.1, 0.5, 1]:
                     w, pred = logisticRegression(
                         trainX, trainY, testX, testY, 5000, alpha, lamda, [opt0, opt1])

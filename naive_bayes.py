@@ -166,6 +166,23 @@ if __name__ == "__main__":
     main()
 
 """
+5-Fold
+RUN01:
+    remove punct:       no
+    remove stopwords:   no
+    stemming:           no
+    smoothing factor:   1
+    train test split:   0.8
+    ACCURACY:           73 + 6.6
+
+RUN01:
+    remove punct:       yes
+    remove stopwords:   no
+    stemming:           no
+    smoothing factor:   0 / 1
+    train test split:   0.8
+    ACCURACY:           73 + 6.7 / 76 + 5.6
+
 1-FOLD 
 RUN01:
     remove punct:       no

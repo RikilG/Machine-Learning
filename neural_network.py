@@ -24,13 +24,14 @@ def main():
     dataset = (dataset - np.min(dataset))/(np.max(dataset) - np.min(dataset))
     x_train, x_test, y_train, y_test = train_test_split(dataset)
 
-    nn = NeuralNet(learning_rate=0.07, random_seed=42)
+    # allowed weights init: random, normal/gaussian, uniform
+    nn = NeuralNet(learning_rate=0.03, weights_init="normal", random_seed=42)
     nn.attach_input(units=10)
     nn.attach_hidden(units=12, layers=1, activation="sigmoid")
-    nn.attach_hidden(units=2, layers=1, activation="sigmoid")
+    nn.attach_hidden(units=4, layers=1, activation="sigmoid")
     nn.attach_output(units=1, activation="sigmoid")
     nn.print_info()
-    nn.train(x_train, y_train, epochs=4500, plot_every=50)
+    nn.train(x_train, y_train, epochs=400, plot_every=50)
     nn.test(x_test, y_test, threshold=0.5)
     # for i in range(1,len(nn.layers)):
     #     print(nn.layers[i].weights)
@@ -63,5 +64,6 @@ The ones who accomplish nothing are the wise who cease advancing.
 10 12 1 / 5000 / 0.1 - 30 m - sigmoid(all)
 10 12 1 / 5000 / 0.1 - 33 m - tanh(all)
 10 12 1 / 5000 / 0.1 - 32 m - relu(all)
-10 12 2 1 / 1800 / 0.1 - 29 - sigmoid(all)
+10 12 2 1 / 1800 / 0.1 - 29 m - sigmoid(all)
+10 12 2 1 / 4500 / 0.03 - 28 m - sigmoid(all)
 """

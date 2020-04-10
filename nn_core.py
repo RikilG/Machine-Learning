@@ -22,10 +22,10 @@ class InputLayer:
 
 class HiddenLayer:
 
-    def __init__(self, units, prev_layer, activation, dropout=0):
-        self.weights = np.random.rand(prev_layer.size, units)
+    def __init__(self, units, prev_layer, weights_init, activation, dropout=0):
+        self.weights = weights_init(size=(prev_layer.size, units))
         self.outputs = np.zeros(units)
-        self.bias    = np.random.rand(units)
+        self.bias    = weights_init(size=units)
         self.activation = activation
         self.size    = units
         self.prev_layer = prev_layer
@@ -49,10 +49,10 @@ class HiddenLayer:
 
 class OutputLayer:
 
-    def __init__(self, units, prev_layer, activation):
-        self.weights = np.random.rand(prev_layer.size, units)
+    def __init__(self, units, prev_layer, weights_init, activation):
+        self.weights = weights_init(size=(prev_layer.size, units))
         self.size = units
-        self.bias = np.random.rand(units)
+        self.bias = weights_init(size=units)
         self.prev_layer = prev_layer
         self.activation = activation
 
@@ -75,6 +75,13 @@ class NeuralNet:
         self.input_layer_attached = False
         self.output_layer_attached = False
         self.alpha = learning_rate
+        if weights_init == "normal" or weights_init == "gaussian":
+            self.weights_init = np.random.normal
+        elif weights_init == "uniform":
+            self.weights_init = np.random.uniform
+        elif weights_init == "random":
+            self.weights_init == np.random.random
+        else: assert False, "unknown weight initilization type"
         if random_seed is not None:
             np.random.seed(random_seed)
     
@@ -122,7 +129,7 @@ class NeuralNet:
         _activation = activation
         activation = self._get_activation_func(activation)
         for i in range(len(self.layers)-1, len(self.layers)+layers-1):
-            self.layers.append(HiddenLayer(units=units, prev_layer=self.layers[i], activation=activation))
+            self.layers.append(HiddenLayer(units=units, prev_layer=self.layers[i], weights_init=self.weights_init, activation=activation))
             self.layers[i+1]._activation = _activation # just the name of activation
         for i in range(len(self.layers)-1):
             self.layers[i]._setNextLayer(self.layers[i+1])
@@ -132,7 +139,7 @@ class NeuralNet:
         assert not self.output_layer_attached, "Output layer already attached"
         _activation = activation
         activation = self._get_activation_func(activation)
-        self.layers.append(OutputLayer(units=units, prev_layer=self.layers[-1], activation=activation))
+        self.layers.append(OutputLayer(units=units, prev_layer=self.layers[-1], weights_init=self.weights_init, activation=activation))
         self.layers[-2]._setNextLayer(self.layers[-1])
         self.layers[-1]._activation = _activation
         self.output_layer_attached = True

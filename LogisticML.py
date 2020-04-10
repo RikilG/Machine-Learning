@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
-fig = plt.figure()
 
 
 def sigmoid(z):
@@ -14,23 +13,34 @@ def cost(trainY, g):
     return np.sum(np.multiply(trainY, np.log(g))+np.multiply((1-trainY), np.log(1-g)))/trainY.shape[0]
 
 
-def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, options):
-    global a
+k = 0
+j = 0
+fig, axs = plt.subplots(1)
+
+
+def logisticRegression(trainX, trainY, crossvalX, crossvalY, noOfIter, lamda, alpha=0.2, options=["without", "uniform"]):
     if options[1] == "random":
         w = np.random.rand(trainX.shape[1])
     elif options[1] == "normal" or options[1] == "gaussian":
         # Since 99% accuracy has weights around this distribution
-        w = np.random.normal(0, 7, trainX.shape[1])
+        w = np.random.normal(0, 1, trainX.shape[1])
     elif options[1] == "uniform":
-        w = np.random.uniform(-7, 7, trainX.shape[1])
+        w = np.random.uniform(-1, 1, trainX.shape[1])
+
+    w = np.array([1, 0, 1, 0, 1])
     errorX = []
     errorY = []
     x = []
+    best = -1
+    #global j, k, fig, axs
+    fig, axs = plt.subplots(1)
     for i in range(noOfIter):
         z = np.dot(trainX, w)
         g = sigmoid(z)  # Hypothesis
         errorX.append(abs(cost(trainY, g)))
-        errorY.append(abs(cost(testY, sigmoid(np.dot(testX, w)))))
+        errorY.append(abs(cost(crossvalY, sigmoid(np.dot(crossvalX, w)))))
+        if best == -1 and abs(cost(trainY, g)) < 0.15:
+            best = i
         x.append(i)
         if options[0] == "without":
             delW = (np.dot(np.transpose(trainX), (g-trainY))) / len(trainY)
@@ -41,10 +51,27 @@ def logisticRegression(trainX, trainY, testX, testY, noOfIter, alpha, lamda, opt
             delW = (np.dot(np.transpose(trainX), (g-trainY)) +
                     lamda*w) / len(trainY)
         w = w - alpha * delW
-    plt.plot(x, errorX)
-    plt.plot(x, errorY)
+
+    axs.plot(x, errorX)
+    axs.plot(x, errorY)
+    axs.set_xlim([0, noOfIter+5])
+    axs.set_ylim([0, 5])
+    axs.set_xlabel('Iterations')
+    axs.set_ylabel('Cost')
+    axs.axvline(x=best, linestyle='dashed')
     plt.show()
-    z = np.dot(testX, w)
+    '''
+    j += 1
+    if j == 5:
+        j = 0
+        plt.show()
+        fig, axs = plt.subplots(5)
+    k += 1
+    if k == 2:
+        k = 0
+        j += 1
+    '''
+    z = np.dot(crossvalX, w)
     test_hyp = sigmoid(z)  # testing hypothesis
     return w, test_hyp >= 0.5
 
@@ -53,37 +80,71 @@ if __name__ == "__main__":
     data = pd.read_csv("./datasets/data_banknote_authentication.txt",
                        sep=',', header=None).values
     p = np.random.permutation(1372)
-    size = int(0.8*len(data))
+    size = int(0.6*len(data))
+    size2 = int(0.2*len(data))
     trainX = data[p[:size], :-1]
-    testX = data[p[size:], :-1]
     trainY = data[p[:size], -1]
-    testY = data[p[size:], -1]
+    crossvalX = data[p[size:size+size2], :-1]
+    crossvalY = data[p[size:size+size2], -1]
+    testX = data[p[size+size2:], :-1]
+    testY = data[p[size+size2:], -1]
 
     trainX = (trainX-np.mean(trainX))/np.std(trainX)
-    testX = (testX-np.mean(testX))/np.std(testX)
-
+    crossvalX = (crossvalX-np.mean(crossvalX))/np.std(crossvalX)
+    testX = (testX - np.mean(testX))/np.std(testX)
     # attaching a column of ones
     trainX = np.concatenate((np.ones((trainX.shape[0], 1)), trainX), axis=1)
     # attaching a column of ones
-    testX = np.concatenate((np.ones((testX.shape[0], 1)), testX), axis=1)
+    crossvalX = np.concatenate(
+        (np.ones((crossvalX.shape[0], 1)), crossvalX), axis=1)
+
+    testX = np.concatenate(
+        (np.ones((testX.shape[0], 1)), testX), axis=1)
 
     # Alpha varied
     print("**********comparison on basis of different factors**********")
 
-    for opt0 in ["without", "L1 norm", "L2 norm"]:
-        for opt1 in ["random", "gaussian", "uniform"]:
-            for alpha in [0.0001, 0.01, 0.1, 0.3]:
-                for lamda in [0.1, 0.5, 1]:
-                    w, pred = logisticRegression(
-                        trainX, trainY, testX, testY, 5000, alpha, lamda, [opt0, opt1])
-                    if opt0 != "without":
-                        print("        regularization constant is : ", lamda)
-                        print("        regularisation type is: ", opt0)
-                    print("        learning rate is : ", alpha)
-                    print("        Weight initialisation: ", opt1)
-                    print("        Accuracy is : ",
-                          (pred == testY).mean()*100, "%")
-                    print("        Weight values : ", w)
-                    print("\n")
-                    if opt0 == "without":
-                        break
+    alpha = 0.2
+    opt1 = "gaussian"
+    lamda = 0
+    opt0 = "without"
+    # for opt0 in ["L1 norm", "L2 norm", "without"]:
+    # for opt1 in ["random", "gaussian", "uniform"]:
+    # for alpha in [0.001, 0.01, 0.05, 0.1, 0.2]:
+    # for lamda in [0.0001, 0.001, 0.01, 0.1, 2]:
+    w, pred = logisticRegression(
+        trainX, trainY, crossvalX, crossvalY, 250, lamda, alpha, [opt0, opt1])
+    if opt0 != "without":
+        print("        regularization constant is : ", lamda)
+        print("        regularisation type is: ", opt0)
+    print("        learning rate is : ", alpha)
+    print("        Weight initialisation: ", opt1)
+    print("        Accuracy is : ",
+          (pred == crossvalY).mean()*100, "%")
+    print("        Weight values : ", w)
+    print("\n")
+    '''
+    if opt0 == "without":
+        break
+        '''
+
+    alpha = 0.2
+    opt1 = "gaussian"
+    lamda = 0.1
+    opt0 = "L2 norm"
+    # TESTING
+    w, pred = logisticRegression(
+        trainX, trainY, testX, testY, 250, lamda, alpha, [opt0, opt1])
+    if opt0 != "without":
+        print("        regularization constant is : ", lamda)
+        print("        regularisation type is: ", opt0)
+    print("        learning rate is : ", alpha)
+    print("        Weight initialisation: ", opt1)
+    print("        Accuracy is : ",
+          (pred == testY).mean()*100, "%")
+    print("        Weight values : ", w)
+    print("\n")
+    '''
+    if opt0 == "without":
+        break
+    '''

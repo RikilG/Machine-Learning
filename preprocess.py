@@ -3,6 +3,7 @@
 import re
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
+from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as stop_words
 
 class TextPreprocess:
@@ -12,8 +13,10 @@ class TextPreprocess:
         self.raw_data = data
         self.data = data.lower()
         self.stemmer = PorterStemmer()
+        self.lemmatizer = WordNetLemmatizer()
         self.stopwords = set()
         self.dostemming = False
+        self.dolemmatization = False
 
     def removeStopwords(self):
         self.stopwords.update(stop_words.words('english'))
@@ -26,8 +29,12 @@ class TextPreprocess:
         self.data = re.sub(r'(['+self.punctuation+'])', r' \1 ', self.data)
         return self
 
-    def performStemming(self):
+    def stem(self):
         self.dostemming = True
+        return self
+    
+    def lemmatize(self):
+        self.dolemmatization = True
         return self
 
     def getNGrams(self, n=3):
@@ -38,6 +45,8 @@ class TextPreprocess:
             return self.data.split()
         self.words = word_tokenize(self.data)
         self.words = [word for word in self.words if word not in self.stopwords]
+        if self.dolemmatization:
+            self.words = [self.lemmatizer.lemmatize(word) for word in self.words]
         if self.dostemming:
             self.words = [self.stemmer.stem(word) for word in self.words]
         return self.words

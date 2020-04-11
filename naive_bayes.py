@@ -109,7 +109,8 @@ def main():
     nfold        = 5
     rm_punct     = True
     rm_stopwords = False
-    stemming     = True
+    stemming     = False
+    lemmatize    = True
     smoothing    = 1
     out_of_vocab = True
     # split        = 0.8
@@ -124,7 +125,8 @@ def main():
         temp = TextPreprocess(line) # preprocess class constructor
         if rm_punct: temp.removePunctuation()   # comment to remove punctuation
         if rm_stopwords: temp.removeStopwords() # comment to keep stopwords
-        if stemming: temp.performStemming()     # commment to NOT stem
+        if lemmatize: temp.lemmatize()
+        if stemming: temp.stem()     # commment to NOT stem
         temp = temp.getTokens()
         processed_lines.append((temp[:len(temp)-1], int(temp[len(temp)-1])))
     # shuffle processed_lines if need arises (seed: 5)

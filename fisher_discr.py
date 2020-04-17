@@ -40,7 +40,7 @@ def FisherLDA(ds,s):
     plt.title("One Dimension transformation for dataset "+str(s))
 
     mu_0 = np.mean(y_0)
-    std_0 = np.std(y_1)
+    std_0 = np.std(y_0)
     xmin, xmax = plt.xlim()
     x = np.linspace(xmin, xmax, 10000)
     p_0 = norm.pdf(x, mu_0, std_0)
@@ -55,8 +55,24 @@ def FisherLDA(ds,s):
     ax2.plot(x, p_1, 'k', linewidth=2,color='green',label="Class 1")
     ax2.legend(loc='upper right')
     intr = intersection(p_0,p_1,x)
+    misclass = 0
+    if mu_0<intr :
+        for y in y_0:
+            if y>intr:
+                misclass=misclass+1
+        for y in y_1:
+            if y<intr:
+                misclass=misclass+1
+    else:
+        for y in y_0:
+            if y<intr:
+                misclass=misclass+1
+        for y in y_1:
+            if y>intr:
+                misclass=misclass+1
     plt.title("Normal curve for dataset "+str(s)+"\nThreshold is "+str(intr))
     print ("Threshold values is" ,intr )
+    print("Accuracy :",100-(misclass*100/row))
     plt.show()
 
 def main():

@@ -25,13 +25,13 @@ def main():
     x_train, x_test, y_train, y_test = train_test_split(dataset)
 
     # allowed weights init: random, normal/gaussian, uniform
-    nn = NeuralNet(learning_rate=0.03, weights_init="normal", random_seed=42)
+    nn = NeuralNet(learning_rate=0.1, weights_init="normal", random_seed=42)
     nn.attach_input(units=10)
     nn.attach_hidden(units=12, layers=1, activation="sigmoid")
-    nn.attach_hidden(units=4, layers=1, activation="sigmoid")
+    nn.attach_hidden(units=2, layers=1, activation="sigmoid")
     nn.attach_output(units=1, activation="sigmoid")
     nn.print_info()
-    nn.train(x_train, y_train, epochs=400, plot_every=50)
+    nn.train(x_train, y_train, epochs=1800, plot_every=50)
     nn.test(x_test, y_test, threshold=0.5)
     # for i in range(1,len(nn.layers)):
     #     print(nn.layers[i].weights)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 The ones who accomplish something are the fools who keep pressing forward,
 The ones who accomplish nothing are the wise who cease advancing.
 
-10 12 12 1 / 5000 / 0.1 - 29 m
+10 12 12 1 / 5000 / 0.1 - 29/1168 m
 10 12 1 / 5000 / 0.1 - 30 m - sigmoid(all)
 10 12 1 / 5000 / 0.1 - 33 m - tanh(all)
 10 12 1 / 5000 / 0.1 - 32 m - relu(all)

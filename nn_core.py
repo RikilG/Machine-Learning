@@ -176,7 +176,7 @@ class NeuralNet:
                 self.plt_iters.append(i)
                 self.plt_errors.append(self.test(x, y, error_measure=True))
         if plot_every is not None:
-            plt.plot(self.plt_iters[20:], self.plt_errors[20:])
+            plt.plot(self.plt_iters[int(0.2*epochs/plot_every):], self.plt_errors[int(0.2*epochs/plot_every):])
             plt.show()
     
     def classify(self, z, threshold=0.5):
@@ -195,8 +195,16 @@ class NeuralNet:
         mse =  np.square(predicted - y).sum()/len(y)
         acc = (predicted == y).sum()/len(y)
         if not error_measure:
-            print(f"Stats: MSE: {mse}, Mis-classified: {misclassfied}")
-            print(f"Accuracy: {acc}")
+            TP = np.logical_and(predicted == y, y == 1).sum()
+            TN = np.logical_and(predicted == y, y == 0).sum()
+            FP = np.logical_and(predicted != y, y == 0).sum()
+            FN = np.logical_and(predicted != y, y == 1).sum()
+            precision = TP/(TP+FP)
+            recall = TP/(TP+FN)
+            f_score = (2*precision*recall)/(precision+recall)
+            print(f"Stats: MSE: {round(mse,4)}, Mis-classified: {misclassfied}")
+            print(f"Precision: {round(precision, 4)}, Recall: {round(recall, 4)}")
+            print(f"Accuracy: {round(acc,4)}, F-Score: {round(f_score, 4)}")
         return mse
 
     def print_info(self):

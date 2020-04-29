@@ -63,7 +63,14 @@ def runNaiveBayes(x_train, x_test, y_train, y_test, class_prob, smoothing, out_o
     y_pred = np.array(y_pred)
     y_test = np.array(y_test[0])
     accuracy = (y_pred == y_test).sum() / len(y_test)
-    return accuracy
+    TP = np.logical_and(y_pred == y_test, y_test == 1).sum()
+    TN = np.logical_and(y_pred == y_test, y_test == 0).sum()
+    FP = np.logical_and(y_pred != y_test, y_test == 0).sum()
+    FN = np.logical_and(y_pred != y_test, y_test == 1).sum()
+    precision = TP/(TP+FP)
+    recall = TP/(TP+FN)
+    f_score = (2*precision*recall)/(precision+recall)
+    return accuracy, round(f_score, 4)
 
 
 def nFoldNaiveBayes(n, processed_lines, smoothing, out_of_vocab):
@@ -85,7 +92,7 @@ def nFoldNaiveBayes(n, processed_lines, smoothing, out_of_vocab):
     slab_size = int(len(processed_lines)/n)
     start = 0
     end = slab_size
-    accuracies = np.array([0.0]*n)
+    accuracies = [0]*n
     for i in range(n):
         if i == n-1: end = len(processed_lines)
         x_train_slab = x_dataset.drop(x_dataset.columns[start:end], axis=1)
@@ -93,14 +100,16 @@ def nFoldNaiveBayes(n, processed_lines, smoothing, out_of_vocab):
         y_train_slab = y_dataset.drop(y_dataset.index[start:end], axis=0)
         y_test_slab = y_dataset.iloc[start:end]
         accuracies[i] = runNaiveBayes(x_train_slab, x_test_slab, y_train_slab, y_test_slab, class_prob, smoothing, out_of_vocab)
-        print(f"Fold {i+1}: {accuracies[i]}")
+        print(f"Fold {i+1}: Accuracy: {accuracies[i][0]}, F-Score: {accuracies[i][1]}")
         start += slab_size
         end += slab_size
-    mean = np.mean(accuracies)
-    mean = int(mean*1000) / 1000 # put only 3 dicimal places
-    std = np.std(accuracies)
-    std = int(std*10000) / 10000 # put only 4 decimal places
-    return mean, std
+    f_scores = [ a[1] for a in accuracies ]
+    accuracies = [ a[0] for a in accuracies ]
+    meanAcc = round(np.mean(accuracies), 3)
+    stdAcc = round(np.std(accuracies), 4)
+    meanF = round(np.mean(f_scores), 3)
+    stdF = round(np.std(f_scores), 4)
+    return meanAcc, stdAcc, meanF, stdF
 
 
 def main():
@@ -133,7 +142,8 @@ def main():
     # random.shuffle(processed_lines)
 
     acc = nFoldNaiveBayes(nfold, processed_lines, smoothing=smoothing, out_of_vocab=out_of_vocab)
-    print(f"F-Score : {acc[0]*100}% ± {acc[1]*100}%")
+    print(f"Accuracy : {acc[0]*100}% ± {acc[1]*100}%")
+    print(f"F-Score : {round(acc[2],3)} ± {round(acc[3],3)}")
     
 
 if __name__ == "__main__":

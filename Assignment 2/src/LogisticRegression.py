@@ -144,6 +144,19 @@ if __name__ == "__main__":
           (pred == testY).mean()*100, "%")
     print("        Weight values : ", w)
     print("\n")
+
+    TP = np.logical_and(pred == testY, testY == 1).sum()
+    TN = np.logical_and(pred == testY, testY == 0).sum()
+    FP = np.logical_and(pred != testY, testY == 0).sum()
+    FN = np.logical_and(pred != testY, testY == 1).sum()
+
+    precision = TP/(TP+FP)
+    recall = TP/(TP+FN)
+
+    F_score = (2*precision*recall)/(precision + recall)
+    print("precision", precision)
+    print("recall", recall)
+    print("F Score", F_score)
     '''
     if opt0 == "without":
         break

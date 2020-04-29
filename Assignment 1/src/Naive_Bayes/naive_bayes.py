@@ -6,6 +6,8 @@ import pandas as pd
 from preprocess import TextPreprocess
 
 # unused because of nfold validation
+
+
 def train_test_split(x_dataset, y_dataset, split=0.8):
     # do not forget! columns are docs, so split columns in X_dataset
     break_at = int(split*len(y_dataset))
@@ -19,14 +21,15 @@ def train_test_split(x_dataset, y_dataset, split=0.8):
 def wordFreqTable(x_train=None, y_train=None, processed_lines=None):
     # create a term frequency index
     word_freq = dict()
-    word_freq['TOTAL'] = [0, 0] # as capital words wont exist in list, we can use TOTAL
+    # as capital words wont exist in list, we can use TOTAL
+    word_freq['TOTAL'] = [0, 0]
 
     if processed_lines is not None:
         # if processed_lines is given in input
         for line in processed_lines:
             for word in line[0]:
                 if word not in word_freq:
-                    word_freq[word] = [0, 0] # no of words in class 0 and 1
+                    word_freq[word] = [0, 0]  # no of words in class 0 and 1
                 word_freq[word][line[1]] += 1
                 word_freq['TOTAL'][line[1]] += 1
         return word_freq
@@ -34,32 +37,38 @@ def wordFreqTable(x_train=None, y_train=None, processed_lines=None):
     if x_train is not None and y_train is not None:
         # if dataframe is given as input
         for line in x_train.columns:
-            for word in [ w for w in x_train.index if x_train.at[w, line] == 1 ]:
+            for word in [w for w in x_train.index if x_train.at[w, line] == 1]:
                 if word not in word_freq:
                     word_freq[word] = [0, 0]
-                word_freq[word][y_train.loc[line,0]] += 1
-                word_freq['TOTAL'][y_train.loc[line,0]] += 1
+                word_freq[word][y_train.loc[line, 0]] += 1
+                word_freq['TOTAL'][y_train.loc[line, 0]] += 1
         return word_freq
 
 
 def predictClass(vector, word_freq, class_prob, alpha, out_of_vocab):
-    if alpha == 0: alpha = 0.00001
+    if alpha == 0:
+        alpha = 0.00001
     predictions = np.array([0]*len(class_prob))
-    vector = vector[ vector == 1 ] # only select words which are present
+    vector = vector[vector == 1]  # only select words which are present
     for clas in range(len(class_prob)):
         for word in vector.index:
-            if word not in word_freq: continue # skip the words not in training dataset
-            if not out_of_vocab and word_freq[word][clas] == 0: continue
-            predictions[clas] += np.log((word_freq[word][clas] + alpha) / (word_freq['TOTAL'][clas] + alpha*len(word_freq)))
+            if word not in word_freq:
+                continue  # skip the words not in training dataset
+            if not out_of_vocab and word_freq[word][clas] == 0:
+                continue
+            predictions[clas] += np.log((word_freq[word][clas] + alpha) / (
+                word_freq['TOTAL'][clas] + alpha*len(word_freq)))
         predictions[clas] += np.log(class_prob[clas])
-    return np.argmax(predictions) # returns the index/class which has highest prob
+    # returns the index/class which has highest prob
+    return np.argmax(predictions)
 
 
 def runNaiveBayes(x_train, x_test, y_train, y_test, class_prob, smoothing, out_of_vocab):
     # bayes uses probability tables which are derived from training data
     word_freq_train = wordFreqTable(x_train=x_train, y_train=y_train)
     # predict class in testing dataset
-    y_pred = [ predictClass(x_test[col], word_freq_train, class_prob, smoothing, out_of_vocab=out_of_vocab) for col in x_test.columns ]
+    y_pred = [predictClass(x_test[col], word_freq_train, class_prob,
+                           smoothing, out_of_vocab=out_of_vocab) for col in x_test.columns]
     y_pred = np.array(y_pred)
     y_test = np.array(y_test[0])
     accuracy = (y_pred == y_test).sum() / len(y_test)
@@ -69,17 +78,18 @@ def runNaiveBayes(x_train, x_test, y_train, y_test, class_prob, smoothing, out_o
 def nFoldNaiveBayes(n, processed_lines, smoothing, out_of_vocab):
     word_freq = wordFreqTable(processed_lines=processed_lines)
     # create a dataframe which hold vectors for each comment/line/response/feedback whatever you call it
-    x_dataset = pd.DataFrame(0, index=word_freq.keys(), columns=[ i for i in range(len(processed_lines)) ])
+    x_dataset = pd.DataFrame(0, index=word_freq.keys(), columns=[
+                             i for i in range(len(processed_lines))])
     # build the dataframe vectors, aha the bag-of-words model from the days/code of IR!
     for i in range(len(processed_lines)):
         for word in processed_lines[i][0]:
             x_dataset.at[word, i] = 1
     # target variable for each line/comment
-    y_dataset = pd.DataFrame([ i[1] for i in processed_lines ])
+    y_dataset = pd.DataFrame([i[1] for i in processed_lines])
     # calculate class probabilities
-    class_prob = [0, 0] # class probability, here, we have 2 classes only
-    class_prob[1] = y_dataset.sum()[0]/len(y_dataset) # prob of class 1
-    class_prob[0] = 1 - class_prob[1] # prob of class0 (complement)
+    class_prob = [0, 0]  # class probability, here, we have 2 classes only
+    class_prob[1] = y_dataset.sum()[0]/len(y_dataset)  # prob of class 1
+    class_prob[0] = 1 - class_prob[1]  # prob of class0 (complement)
     # train test split
     # x_train, x_test, y_train, y_test = train_test_split(x_dataset, y_dataset, 0.8)
     slab_size = int(len(processed_lines)/n)
@@ -87,54 +97,61 @@ def nFoldNaiveBayes(n, processed_lines, smoothing, out_of_vocab):
     end = slab_size
     accuracies = np.array([0.0]*n)
     for i in range(n):
-        if i == n-1: end = len(processed_lines)
+        if i == n-1:
+            end = len(processed_lines)
         x_train_slab = x_dataset.drop(x_dataset.columns[start:end], axis=1)
-        x_test_slab = x_dataset.iloc[:,start:end]
+        x_test_slab = x_dataset.iloc[:, start:end]
         y_train_slab = y_dataset.drop(y_dataset.index[start:end], axis=0)
         y_test_slab = y_dataset.iloc[start:end]
-        accuracies[i] = runNaiveBayes(x_train_slab, x_test_slab, y_train_slab, y_test_slab, class_prob, smoothing, out_of_vocab)
+        accuracies[i] = runNaiveBayes(
+            x_train_slab, x_test_slab, y_train_slab, y_test_slab, class_prob, smoothing, out_of_vocab)
         print(f"Fold {i+1}: {accuracies[i]}")
         start += slab_size
         end += slab_size
     mean = np.mean(accuracies)
-    mean = int(mean*1000) / 1000 # put only 3 dicimal places
+    mean = int(mean*1000) / 1000  # put only 3 dicimal places
     std = np.std(accuracies)
-    std = int(std*10000) / 10000 # put only 4 decimal places
+    std = int(std*10000) / 10000  # put only 4 decimal places
     return mean, std
 
 
 def main():
 
     # params
-    nfold        = 5
-    rm_punct     = True
+    nfold = 5
+    rm_punct = True
     rm_stopwords = False
-    stemming     = False
-    lemmatize    = True
-    smoothing    = 1
+    stemming = False
+    lemmatize = True
+    smoothing = 1
     out_of_vocab = True
     # split        = 0.8
 
     # read file/dataset
-    with open('datasets/a1_d3.txt', 'r') as file:
+    with open('./../../datasets/a1_d3.txt', 'r') as file:
         raw_lines = file.readlines()
 
     # preprocess lines and seperate target variable
     processed_lines = []
     for line in raw_lines:
-        temp = TextPreprocess(line) # preprocess class constructor
-        if rm_punct: temp.removePunctuation()   # comment to remove punctuation
-        if rm_stopwords: temp.removeStopwords() # comment to keep stopwords
-        if lemmatize: temp.lemmatize()
-        if stemming: temp.stem()     # commment to NOT stem
+        temp = TextPreprocess(line)  # preprocess class constructor
+        if rm_punct:
+            temp.removePunctuation()   # comment to remove punctuation
+        if rm_stopwords:
+            temp.removeStopwords()  # comment to keep stopwords
+        if lemmatize:
+            temp.lemmatize()
+        if stemming:
+            temp.stem()     # commment to NOT stem
         temp = temp.getTokens()
         processed_lines.append((temp[:len(temp)-1], int(temp[len(temp)-1])))
     # shuffle processed_lines if need arises (seed: 5)
     # random.shuffle(processed_lines)
 
-    acc = nFoldNaiveBayes(nfold, processed_lines, smoothing=smoothing, out_of_vocab=out_of_vocab)
+    acc = nFoldNaiveBayes(nfold, processed_lines,
+                          smoothing=smoothing, out_of_vocab=out_of_vocab)
     print(f"F-Score : {acc[0]*100}% ± {acc[1]*100}%")
-    
+
 
 if __name__ == "__main__":
     random.seed(42)

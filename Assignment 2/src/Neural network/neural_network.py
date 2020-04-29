@@ -17,7 +17,7 @@ def train_test_split(dataset, split=0.8):
 
 
 def main():
-    dataset = pd.read_csv('datasets/housepricedata.csv')
+    dataset = pd.read_csv('./../../datasets/housepricedata.csv')
     # Standadization
     # dataset = (dataset-np.mean(dataset))/np.std(dataset)
     # min-max scaling / Normalization

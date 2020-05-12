@@ -80,8 +80,8 @@ def FisherLDA(ds, s):
 
 
 def main():
-    ds1 = pd.read_csv("./../datasets/a1_d1.csv", header=None)
-    ds2 = pd.read_csv("./../datasets/a1_d2.csv", header=None)
+    ds1 = pd.read_csv("./../../datasets/a1_d1.csv", header=None)
+    ds2 = pd.read_csv("./../../datasets/a1_d2.csv", header=None)
     FisherLDA(ds1, 1)
     FisherLDA(ds2, 2)
 

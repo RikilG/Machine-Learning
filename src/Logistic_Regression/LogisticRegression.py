@@ -77,7 +77,7 @@ def logisticRegression(trainX, trainY, crossvalX, crossvalY, noOfIter, lamda, al
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("./../datasets/data_banknote_authentication.txt",
+    data = pd.read_csv("./../../datasets/data_banknote_authentication.txt",
                        sep=',', header=None).values
     p = np.random.permutation(1372)
     size = int(0.6*len(data))
